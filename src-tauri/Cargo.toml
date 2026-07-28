@@ -1,0 +1,79 @@
+[package]
+name = "whisper-screen"
+version = "0.1.0"
+description = "Voice OS & Multimodal Parallel Bridge"
+authors = ["Adam Gardella"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.82"
+
+[lib]
+name = "whisper_screen_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2.6.3" }
+
+[dependencies]
+tauri = { version = "2.11.3", features = ["tray-icon", "image-png"] }
+tauri-plugin-global-shortcut = "2.3.2"
+tauri-plugin-opener = "2.5"
+tauri-plugin-log = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+log = "0.4"
+
+# OS credential store (Windows Credential Manager / macOS Keychain) for API
+# keys. Calls block, so they go through `spawn_blocking` like everything else
+# that talks to the OS synchronously.
+keyring = "3"
+
+# Only the pieces of tokio we actually use. The runtime itself is Tauri's
+# (`tauri::async_runtime`) so there is exactly one reactor in the process.
+tokio = { version = "1", features = ["macros", "sync", "time"] }
+tokio-util = "0.7"
+parking_lot = "0.12"
+
+cpal = "0.18"
+hound = "3.5"
+xcap = "0.9"
+image = { version = "0.25", default-features = false, features = ["png"] }
+
+# rustls rather than native-tls: no OpenSSL to find at build time on Windows,
+# and one less thing that differs between the two platforms.
+reqwest = { version = "0.12", default-features = false, features = [
+    "json",
+    "multipart",
+    "rustls-tls",
+    "stream",
+] }
+base64 = "0.22"
+
+# Synthetic input and clipboard. Both talk to the OS on the calling thread and
+# block, so every use goes through `spawn_blocking`.
+enigo = "0.6"
+arboard = { version = "3.6", features = ["image-data"] }
+
+# Optional: offline transcription via whisper.cpp. Off by default — it builds a
+# C++ library. Enable with `cargo build --features local-stt`.
+whisper-rs = { version = "0.14", optional = true }
+
+[features]
+local-stt = ["dep:whisper-rs"]
+
+[profile.dev]
+# The audio callback runs on a realtime thread; at opt-level 0 the per-frame
+# downmix is slow enough to risk dropouts during `tauri dev`.
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

@@ -1,0 +1,413 @@
+/*
+ * A tray popover, not a web page: dense, dark, no chrome of its own.
+ * Follows the OS theme because a menu-bar utility that ignores it looks broken.
+ */
+
+:root {
+  --bg: #14161a;
+  --card: #1c1f25;
+  --line: #2b2f37;
+  --text: #e7e9ee;
+  --muted: #8b93a1;
+  --accent: #6ea8fe;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --bad: #f87171;
+
+  color-scheme: dark;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 14px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f6f7f9;
+    --card: #ffffff;
+    --line: #e2e5ea;
+    --text: #14161a;
+    --muted: #626b7a;
+    --accent: #1c64f2;
+    color-scheme: light;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+h1 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin: 12px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+h2:first-child {
+  margin-top: 0;
+}
+
+.badge {
+  padding: 3px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.badge--recording,
+.badge--latched {
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.badge--finalizing {
+  border-color: var(--warn);
+  color: var(--warn);
+}
+
+.card {
+  padding: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.meter {
+  height: 6px;
+  overflow: hidden;
+  background: var(--line);
+  border-radius: 999px;
+}
+
+.meter__fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: inherit;
+  /* Matches the 100 ms tick so the bar glides instead of stepping. */
+  transition: width 90ms linear;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.row--mono {
+  justify-content: space-between;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+button {
+  padding: 6px 11px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  color: var(--accent);
+  text-align: left;
+}
+
+dl {
+  display: grid;
+  grid-template-columns: minmax(90px, auto) 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 12px;
+}
+
+dt {
+  color: var(--muted);
+}
+
+dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.keys {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.keys li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+}
+
+.keys span {
+  color: var(--muted);
+}
+
+kbd {
+  padding: 2px 6px;
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
+  font-size: 11px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.warn {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--warn);
+}
+
+.error {
+  margin: 0;
+  padding: 9px 11px;
+  font-size: 12px;
+  color: var(--bad);
+  border: 1px solid var(--bad);
+  border-radius: 8px;
+  /* Errors are the one thing worth copying out of this window. */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.ok {
+  color: var(--ok);
+}
+
+.over {
+  color: var(--bad);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+/* --- Tabs --------------------------------------------------------------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  padding: 6px 2px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.tab--active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.statusline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* --- Forms -------------------------------------------------------------- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.field > span {
+  color: var(--muted);
+}
+
+.field > em {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="password"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+input.mono {
+  font-family: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
+  font-size: 11px;
+}
+
+.checkwrap {
+  margin-top: 10px;
+}
+
+.check {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.check input {
+  accent-color: var(--accent);
+}
+
+.addrow {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.addrow input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* --- Editable lists (dictionary, snippets) ------------------------------ */
+
+.editlist {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12px;
+}
+
+.editlist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.editlist li:last-child {
+  border-bottom: 0;
+}
+
+/* Terms and triggers are user data worth copying out of the window. */
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* --- API key rows ------------------------------------------------------- */
+
+.keyrow {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+
+.keyrow__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.keyrow > kbd {
+  display: inline-block;
+  margin-bottom: 4px;
+}
+
+.badge--ok {
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+/* --- Save bar ----------------------------------------------------------- */
+
+.savebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* The transcript is the other thing worth selecting. */
+.transcript {
+  -webkit-user-select: text;
+  user-select: text;
+}
